@@ -229,6 +229,17 @@ def main_page():
                 end_btn.enable()
                 send_btn.enable()
 
+            def update_btn_visibility():
+                """면접 상태에 따라 버튼 표시/숨김"""
+                if app_state["interview_started"]:
+                    start_btn.set_visibility(False)
+                    end_btn.set_visibility(True)
+                    send_btn.set_visibility(True)
+                else:
+                    start_btn.set_visibility(True)
+                    end_btn.set_visibility(False)
+                    send_btn.set_visibility(False)
+
             async def start_interview():
                 if not app_state["generated_intro"]:
                     ui.notify("먼저 자기소개서를 생성해주세요.", type="warning")
@@ -256,6 +267,7 @@ def main_page():
                     app_state["interview_started"] = False
                 finally:
                     hide_loading()
+                    update_btn_visibility()
 
             async def send_answer():
                 answer = interview_input.value.strip()
@@ -337,6 +349,7 @@ def main_page():
                     ui.notify(f"피드백 생성 실패: {e}", type="negative")
                 finally:
                     hide_loading()
+                    update_btn_visibility()
 
             with ui.row().classes("w-full gap-4 q-mb-md"):
                 start_btn = ui.button("🎤 면접 시작", on_click=start_interview).props("color=primary")
@@ -346,6 +359,10 @@ def main_page():
 
             interview_input.on("keydown.enter", send_answer)
             send_btn = ui.button("전송", on_click=send_answer).classes("w-full").props("color=primary")
+
+            # 초기 상태: 종료/전송 버튼 숨김
+            end_btn.set_visibility(False)
+            send_btn.set_visibility(False)
 
     with ui.footer().classes("bg-grey-2 text-center"):
         ui.label("Powered by AWS Bedrock Claude 3 Haiku").classes("text-grey-7 text-caption")

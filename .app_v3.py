@@ -216,10 +216,9 @@ with tab2:
         st.markdown("자기소개서를 기반으로 모의 면접을 진행합니다. 면접관이 질문하면 답변해주세요.")
         st.markdown("---")
 
-        # 면접 시작/종료 버튼
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🎤 면접 시작", type="primary", use_container_width=True, disabled=st.session_state.interview_started):
+        # 면접 시작/종료 버튼 (상태에 따라 표시)
+        if not st.session_state.interview_started:
+            if st.button("🎤 면접 시작", type="primary", use_container_width=True):
                 st.session_state.interview_started = True
                 st.session_state.interview_question_count = 0
                 st.session_state.interview_messages = []
@@ -239,8 +238,8 @@ with tab2:
                         st.error(f"면접 시작 실패: {e}")
                         st.session_state.interview_started = False
 
-        with col2:
-            if st.button("⏹️ 면접 종료 및 피드백", use_container_width=True, disabled=not st.session_state.interview_started):
+        else:
+            if st.button("⏹️ 면접 종료 및 피드백", type="secondary", use_container_width=True):
                 feedback_system = f"""당신은 IT 기업의 경험 많은 면접관입니다.
 방금 진행한 모의 면접에 대해 종합 피드백을 제공해주세요.
 
