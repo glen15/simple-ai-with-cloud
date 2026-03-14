@@ -126,6 +126,11 @@ def main_page():
                     placeholder="이 분야를 선택한 이유나 계기",
                 ).classes("w-full")
 
+            loading_container = ui.row().classes("w-full justify-center q-mt-md hidden")
+            with loading_container:
+                ui.spinner("dots", size="lg", color="primary")
+                ui.label("AI가 자기소개서를 작성하고 있습니다...").classes("text-grey-7 q-ml-sm")
+
             intro_output = ui.markdown("").classes("w-full q-mt-md")
 
             async def on_generate():
@@ -133,7 +138,8 @@ def main_page():
                     ui.notify("이름, 대학교, 학과는 필수 입력입니다.", type="warning")
                     return
 
-                spinner = ui.spinner("dots", size="lg")
+                generate_btn.disable()
+                loading_container.classes(remove="hidden")
 
                 prompt = f"""아래 정보를 바탕으로 {tone.value} 자기소개서를 작성해주세요.
 
@@ -173,10 +179,11 @@ def main_page():
                     ui.notify("자기소개서가 생성되었습니다!", type="positive")
                 except Exception as e:
                     ui.notify(f"AI 생성 실패: {e}", type="negative")
+                finally:
+                    loading_container.classes(add="hidden")
+                    generate_btn.enable()
 
-                spinner.delete()
-
-            ui.button("🤖 AI로 자기소개서 생성", on_click=on_generate).classes(
+            generate_btn = ui.button("🤖 AI로 자기소개서 생성", on_click=on_generate).classes(
                 "w-full q-mt-md"
             ).props("color=primary size=lg")
 
@@ -203,11 +210,30 @@ def main_page():
                             ui.label(label).classes("text-bold text-caption q-mb-xs")
                             ui.markdown(msg["content"])
 
+            interview_loading = ui.row().classes("w-full justify-center q-py-md hidden")
+            with interview_loading:
+                ui.spinner("dots", size="lg", color="primary")
+                loading_label = ui.label("면접관이 질문을 준비하고 있습니다...").classes("text-grey-7 q-ml-sm")
+
+            def show_loading(msg="AI가 응답을 생성하고 있습니다..."):
+                loading_label.set_text(msg)
+                interview_loading.classes(remove="hidden")
+                start_btn.disable()
+                end_btn.disable()
+                send_btn.disable()
+
+            def hide_loading():
+                interview_loading.classes(add="hidden")
+                start_btn.enable()
+                end_btn.enable()
+                send_btn.enable()
+
             async def start_interview():
                 if not app_state["generated_intro"]:
                     ui.notify("먼저 자기소개서를 생성해주세요.", type="warning")
                     return
 
+                show_loading("면접관이 질문을 준비하고 있습니다...")
                 app_state["interview_started"] = True
                 app_state["interview_messages"] = []
                 system_prompt = build_interview_system(
@@ -226,6 +252,8 @@ def main_page():
                 except Exception as e:
                     ui.notify(f"면접 시작 실패: {e}", type="negative")
                     app_state["interview_started"] = False
+                finally:
+                    hide_loading()
 
             async def send_answer():
                 answer = interview_input.value.strip()
@@ -235,6 +263,7 @@ def main_page():
                 interview_input.value = ""
                 app_state["interview_messages"].append({"role": "user", "content": answer})
                 render_messages()
+                show_loading("면접관이 답변을 평가하고 있습니다...")
 
                 system_prompt = build_interview_system(
                     app_state["generated_intro"], app_state["user_info"],
@@ -253,10 +282,14 @@ def main_page():
                     render_messages()
                 except Exception as e:
                     ui.notify(f"질문 생성 실패: {e}", type="negative")
+                finally:
+                    hide_loading()
 
             async def end_interview():
                 if not app_state["interview_messages"]:
                     return
+
+                show_loading("종합 피드백을 생성하고 있습니다...")
 
                 info = app_state["user_info"]
                 feedback_system = f"""당신은 IT 기업의 경험 많은 면접관입니다.
@@ -300,15 +333,17 @@ def main_page():
                     ui.notify("면접 피드백이 생성되었습니다!", type="positive")
                 except Exception as e:
                     ui.notify(f"피드백 생성 실패: {e}", type="negative")
+                finally:
+                    hide_loading()
 
             with ui.row().classes("w-full gap-4 q-mb-md"):
-                ui.button("🎤 면접 시작", on_click=start_interview).props("color=primary")
-                ui.button("⏹️ 면접 종료 및 피드백", on_click=end_interview).props("color=grey")
+                start_btn = ui.button("🎤 면접 시작", on_click=start_interview).props("color=primary")
+                end_btn = ui.button("⏹️ 면접 종료 및 피드백", on_click=end_interview).props("color=grey")
 
             render_messages()
 
             interview_input.on("keydown.enter", send_answer)
-            ui.button("전송", on_click=send_answer).classes("w-full").props("color=primary")
+            send_btn = ui.button("전송", on_click=send_answer).classes("w-full").props("color=primary")
 
     with ui.footer().classes("bg-grey-2 text-center"):
         ui.label("Powered by AWS Bedrock Claude 3 Haiku").classes("text-grey-7 text-caption")
