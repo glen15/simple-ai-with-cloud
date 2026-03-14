@@ -30,7 +30,7 @@ CAREERS = [
 ]
 
 
-def generate_with_ai(name, university, department, year, career, experience, motivation, tone):
+def generate_with_ai(name, university, department, year, career, experience, certificates, motivation, tone):
     """Bedrock Claude 3 Haiku로 자기소개서 생성"""
     client = boto3.client("bedrock-runtime", region_name="us-east-1")
 
@@ -44,6 +44,7 @@ def generate_with_ai(name, university, department, year, career, experience, mot
 - 학년: {year}
 - 희망 진로: {career}
 - 관련 경험: {experience if experience else "아직 관련 경험이 없음 (학습 의지 강조)"}
+- 자격증: {certificates if certificates else "없음"}
 - 지원 동기: {motivation if motivation else "자유롭게 작성"}
 
 [작성 지침]
@@ -94,6 +95,11 @@ experience = st.text_area(
     value="AWS EC2, ALB, RDS를 활용한 3티어 아키텍처 기반으로 AI 애플리케이션을 설계하고 배포한 경험이 있습니다. Bedrock을 연동하여 생성형 AI 기능을 구현했습니다.",
     height=120,
 )
+certificates = st.text_input(
+    "자격증 (선택사항)",
+    value="",
+    placeholder="예: AWS SAA, AWS AIF, 정보처리기사 등",
+)
 motivation = st.text_area(
     "지원 동기 (선택사항)",
     value="",
@@ -110,7 +116,7 @@ if st.button("🤖 AI로 자기소개서 생성", type="primary", use_container_
             try:
                 result = generate_with_ai(
                     name, university, department, year,
-                    career, experience, motivation, tone,
+                    career, experience, certificates, motivation, tone,
                 )
                 st.markdown("## 📄 생성된 자기소개서")
                 st.markdown(result)

@@ -77,9 +77,13 @@ CAREERS = {
 }
 
 
-def generate_intro(name, university, department, year, career, experience, motivation):
+def generate_intro(name, university, department, year, career, experience, certificates, motivation):
     """템플릿 기반 자기소개서 생성"""
     info = CAREERS[career]
+
+    cert_section = ""
+    if certificates:
+        cert_section = f"\n또한 {certificates} 자격증을 보유하고 있어 관련 분야에 대한 전문성을 갖추고 있습니다."
 
     return f"""## 자기소개서
 
@@ -95,7 +99,7 @@ def generate_intro(name, university, department, year, career, experience, motiv
 ### 3. 강점 및 역량
 
 {info['strength']}
-{f"그동안의 경험을 통해 이를 더욱 확신하게 되었습니다: {experience}" if experience else f"관련 기술({info['skills']})을 학습하며 역량을 쌓아가고 있습니다."}
+{f"그동안의 경험을 통해 이를 더욱 확신하게 되었습니다: {experience}" if experience else f"관련 기술({info['skills']})을 학습하며 역량을 쌓아가고 있습니다."}{cert_section}
 
 ### 4. 향후 계획
 
@@ -134,6 +138,11 @@ experience = st.text_area(
     value="AWS EC2, ALB, RDS를 활용한 3티어 아키텍처 기반으로 AI 애플리케이션을 설계하고 배포한 경험이 있습니다. Bedrock을 연동하여 생성형 AI 기능을 구현했습니다.",
     height=100,
 )
+certificates = st.text_input(
+    "자격증 (선택사항)",
+    value="",
+    placeholder="예: AWS SAA, AWS AIF, 정보처리기사 등",
+)
 motivation = st.text_area(
     "지원 동기 (선택사항)",
     value="",
@@ -146,7 +155,7 @@ if st.button("📝 자기소개서 생성", type="primary", use_container_width=
     if not name or not university or not department:
         st.warning("이름, 대학교, 학과는 필수 입력입니다.")
     else:
-        result = generate_intro(name, university, department, year, career, experience, motivation)
+        result = generate_intro(name, university, department, year, career, experience, certificates, motivation)
         st.markdown(result)
 
         st.download_button(
