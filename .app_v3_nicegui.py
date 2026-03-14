@@ -244,7 +244,7 @@ def main_page():
                 try:
                     first_q = await asyncio.to_thread(
                         call_bedrock,
-                        [{"role": "user", "content": "면접을 시작해주세요. 자기소개서를 꼼꼼히 읽고 첫 번째 질문을 해주세요."}],
+                        [{"role": "user", "content": "면접을 시작해주세요. 간단한 인사와 함께 첫 번째 질문만 해주세요. [답변 평가], [조언]은 절대 하지 마세요. 질문만 하세요."}],
                         system_prompt,
                     )
                     app_state["interview_messages"].append({"role": "assistant", "content": first_q})
