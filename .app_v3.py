@@ -203,9 +203,11 @@ with tab2:
 자기소개서와 관련된 질문에는 친절하게 답변해주세요.
 IT 진로 상담도 해줄 수 있습니다."""
 
+                        # 첫 assistant 환영 메시지 제외 (API는 user부터 시작해야 함)
                         api_messages = [
                             {"role": m["role"], "content": m["content"]}
                             for m in st.session_state.chat_messages
+                            if not (m["role"] == "assistant" and m == st.session_state.chat_messages[0])
                         ]
 
                         response = call_bedrock(api_messages, system_prompt)
