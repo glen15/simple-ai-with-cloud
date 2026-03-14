@@ -9,7 +9,7 @@
 | v1 | `app_v1.py` | 템플릿 기반 (AI 없음) |
 | v2 | `.app_v2.py` | Bedrock Claude Haiku AI 생성 |
 | v3 | `.app_v3.py` | AI 생성 + 모의 면접 (Streamlit) |
-| v3 Gradio | `.app_v3_gradio.py` | AI 생성 + 모의 면접 (Gradio, UI 개선) |
+| v3 NiceGUI | `.app_v3_nicegui.py` | AI 생성 + 모의 면접 (NiceGUI, UI 개선) |
 
 ## 지원 진로
 
@@ -41,8 +41,8 @@ streamlit run .app_v2.py
 # v3: AI + 모의면접 (Streamlit)
 streamlit run .app_v3.py
 
-# v3: AI + 모의면접 (Gradio)
-python .app_v3_gradio.py
+# v3: AI + 모의면접 (NiceGUI)
+python3 .app_v3_nicegui.py
 ```
 
 ## 사전 요구사항
