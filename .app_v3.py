@@ -254,10 +254,12 @@ with tab2:
 
                 with st.spinner("피드백을 생성하고 있습니다..."):
                     try:
-                        api_messages = [
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.interview_messages
-                        ]
+                        # 첫 assistant 메시지 제외 (API는 user부터 시작해야 함)
+                        api_messages = []
+                        for i, m in enumerate(st.session_state.interview_messages):
+                            if i == 0 and m["role"] == "assistant":
+                                continue
+                            api_messages.append({"role": m["role"], "content": m["content"]})
                         api_messages.append({
                             "role": "user",
                             "content": "면접이 끝났습니다. 종합 피드백을 주세요.",
@@ -290,10 +292,12 @@ with tab2:
 
                 with st.spinner("면접관이 다음 질문을 준비하고 있습니다..."):
                     try:
-                        api_messages = [
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.interview_messages
-                        ]
+                        # 첫 assistant 메시지 제외 (API는 user부터 시작해야 함)
+                        api_messages = []
+                        for i, m in enumerate(st.session_state.interview_messages):
+                            if i == 0 and m["role"] == "assistant":
+                                continue
+                            api_messages.append({"role": m["role"], "content": m["content"]})
 
                         response = call_bedrock(api_messages, INTERVIEW_SYSTEM)
                         st.session_state.interview_messages.append({
