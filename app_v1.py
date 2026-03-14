@@ -131,7 +131,7 @@ with st.expander(f"💡 {career} 관련 정보"):
 
 experience = st.text_area(
     "관련 경험 (선택사항)",
-    value="교내 웹 개발 프로젝트에서 팀장을 맡아 3개월간 서비스를 개발한 경험이 있습니다.",
+    value="AWS EC2, ALB, RDS를 활용한 3티어 아키텍처 기반으로 AI 애플리케이션을 설계하고 배포한 경험이 있습니다. Bedrock을 연동하여 생성형 AI 기능을 구현했습니다.",
     height=100,
 )
 motivation = st.text_area(
