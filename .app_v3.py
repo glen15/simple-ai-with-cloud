@@ -8,22 +8,25 @@ import streamlit as st
 import json
 import boto3
 
-# ===== 진로 데이터 =====
+# ===== 학과/진로 데이터 =====
+DEPARTMENTS = [
+    "컴퓨터공학부 (11명)",
+    "컴퓨터인공지능학부 (9명)",
+    "IT지능정보공학과 (4명)",
+    "IT정보공학과",
+]
+
 CAREERS = [
-    "프론트엔드 개발자",
     "백엔드 개발자",
+    "프론트엔드 개발자",
+    "AI/ML 엔지니어",
     "데이터 엔지니어",
     "데이터 분석가",
     "클라우드 엔지니어",
+    "DevSecOps 엔지니어",
     "솔루션즈 아키텍트",
-    "데브옵스 엔지니어",
-    "보안 엔지니어 (SecOps)",
-    "AI 엔지니어",
+    "정보보안 전문가",
     "풀스택 개발자",
-    "모바일 개발자",
-    "게임 개발자",
-    "QA 엔지니어",
-    "IT 컨설턴트",
 ]
 
 
@@ -103,9 +106,9 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         name = st.text_input("이름", value="홍길동")
-        university = st.text_input("대학교", value="한국대학교")
+        university = st.text_input("대학교", value="전북대학교")
     with col2:
-        department = st.text_input("학과", value="컴퓨터공학과")
+        department = st.selectbox("학과", DEPARTMENTS)
         year = st.selectbox("학년", ["1학년", "2학년", "3학년", "4학년", "졸업예정"], index=2)
 
     career = st.selectbox("희망 진로", CAREERS)
