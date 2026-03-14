@@ -1,5 +1,5 @@
 """
-IT 자기소개서 생성기 (v3: AI 생성 + 챗봇 + 모의 면접)
+IT 자기소개서 생성기 (v3: AI 생성 + 모의 면접)
 실행: streamlit run .app_v3.py
 필요: pip install streamlit boto3
 AWS 자격증명 필요 (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION)
@@ -82,12 +82,11 @@ def generate_intro(name, university, department, year, career, experience, motiv
 # ===== 앱 시작 =====
 st.set_page_config(page_title="IT 자기소개서 + 모의면접", page_icon="💬")
 st.title("💬 IT 자기소개서 생성기")
-st.caption("v3 — AI 생성 + 챗봇 + 모의 면접")
+st.caption("v3 — AI 생성 + 모의 면접")
 
 # 세션 상태 초기화
 for key, default in {
     "generated_intro": "",
-    "chat_messages": [],
     "user_info": {},
     "interview_messages": [],
     "interview_started": False,
@@ -97,7 +96,7 @@ for key, default in {
         st.session_state[key] = default
 
 # ===== 탭 구성 =====
-tab1, tab2, tab3 = st.tabs(["📝 자기소개서 생성", "💬 AI 챗봇", "🎤 모의 면접"])
+tab1, tab2 = st.tabs(["📝 자기소개서 생성", "🎤 모의 면접"])
 
 # ===== 탭1: 자기소개서 생성 =====
 with tab1:
@@ -146,12 +145,10 @@ with tab1:
                         "department": department, "year": year,
                         "career": career, "experience": experience,
                     }
-                    st.session_state.chat_messages = [
-                        {
-                            "role": "assistant",
-                            "content": f"자기소개서가 생성되었습니다! 수정하고 싶은 부분이 있으면 말씀해주세요.\n\n예시:\n- \"지원 동기 부분을 더 구체적으로 써줘\"\n- \"경험 부분에 AWS 자격증 내용을 추가해줘\"\n- \"{career}에 필요한 역량이 뭐야?\"\n- \"전체적으로 좀 더 격식있게 바꿔줘\"",
-                        }
-                    ]
+                    # 면접 초기화
+                    st.session_state.interview_messages = []
+                    st.session_state.interview_started = False
+                    st.session_state.interview_question_count = 0
                 except Exception as e:
                     st.error(f"AI 생성 실패: {e}")
                     st.info("AWS 자격증명이 설정되어 있는지 확인해주세요.")
@@ -167,29 +164,11 @@ with tab1:
             mime="text/markdown",
         )
 
-# ===== 탭2: 챗봇 =====
-with tab2:
-    if not st.session_state.generated_intro:
-        st.info("먼저 '📝 자기소개서 생성' 탭에서 자기소개서를 생성해주세요.")
-    else:
-        st.markdown("자기소개서에 대해 수정 요청이나 질문을 해보세요.")
-        st.markdown("---")
+# ===== 탭2: 모의 면접 =====
+INTERVIEW_SYSTEM = f"""당신은 IT 기업의 경험 많은 기술 면접관입니다.
+지원자의 자기소개서를 꼼꼼히 읽고, 자기소개서에 적힌 내용을 기반으로 모의 면접을 진행합니다.
 
-        for msg in st.session_state.chat_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
-        if user_input := st.chat_input("수정 요청이나 질문을 입력하세요...", key="chat_input"):
-            st.session_state.chat_messages.append({"role": "user", "content": user_input})
-            with st.chat_message("user"):
-                st.markdown(user_input)
-
-            with st.chat_message("assistant"):
-                with st.spinner("생각 중..."):
-                    try:
-                        system_prompt = f"""당신은 IT 분야 자기소개서 전문 작성 도우미입니다.
-
-[현재 자기소개서]
+[자기소개서]
 {st.session_state.generated_intro}
 
 [지원자 정보]
@@ -198,36 +177,25 @@ with tab2:
 - 학과: {st.session_state.user_info.get('department', '')}
 - 학년: {st.session_state.user_info.get('year', '')}
 - 희망 진로: {st.session_state.user_info.get('career', '')}
+- 관련 경험: {st.session_state.user_info.get('experience', '')}
 
-사용자가 자기소개서 수정을 요청하면 수정된 전체 자기소개서를 마크다운으로 작성해주세요.
-자기소개서와 관련된 질문에는 친절하게 답변해주세요.
-IT 진로 상담도 해줄 수 있습니다."""
+[면접 진행 규칙]
+1. 한 번에 질문 1개만 합니다. 여러 질문을 한꺼번에 하지 마세요.
+2. 반드시 자기소개서에 적힌 구체적인 내용(프로젝트명, 기술, 경험, 목표 등)을 인용하며 질문하세요.
+   - 예: "자기소개서에서 '웹 개발 프로젝트에서 팀장을 맡았다'고 하셨는데, 팀원 간 의견 충돌이 있었을 때 어떻게 해결하셨나요?"
+   - 예: "자기소개서에 '{st.session_state.user_info.get('career', '')}'를 희망한다고 적으셨는데, 이 직무에서 가장 중요한 역량이 무엇이라고 생각하시나요?"
+3. 지원자의 답변이 모호하거나 구체성이 부족하면 꼬리질문으로 더 깊이 파고드세요.
+   - 예: "좀 더 구체적으로 말씀해주실 수 있나요? 어떤 기술을 사용했고, 본인의 역할은 정확히 무엇이었나요?"
+4. 답변이 충분하면 간단한 코멘트 후 자기소개서의 다른 부분에 대해 질문합니다.
+5. 질문 유형을 골고루 섞으세요:
+   - 경험 질문: 자기소개서에 적힌 프로젝트/활동에 대한 구체적 상황
+   - 기술 질문: 희망 진로와 관련된 기술적 지식
+   - 상황 질문: "만약 ~한 상황이라면 어떻게 하시겠습니까?"
+   - 동기 질문: 왜 이 분야를 선택했는지, 어떤 목표가 있는지
+6. 면접관답게 정중하지만 날카롭게 질문합니다.
+7. 반드시 한국어로 진행합니다."""
 
-                        # 첫 assistant 환영 메시지 제외 (API는 user부터 시작해야 함)
-                        api_messages = [
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.chat_messages
-                            if not (m["role"] == "assistant" and m == st.session_state.chat_messages[0])
-                        ]
-
-                        response = call_bedrock(api_messages, system_prompt)
-                        st.markdown(response)
-
-                        st.session_state.chat_messages.append({
-                            "role": "assistant",
-                            "content": response,
-                        })
-
-                        if "###" in response and len(response) > 200:
-                            st.session_state.generated_intro = response
-                            st.success("자기소개서가 업데이트되었습니다! '📝 자기소개서 생성' 탭에서 확인하세요.")
-
-                    except Exception as e:
-                        st.error(f"응답 생성 실패: {e}")
-                        st.info("AWS 자격증명이 설정되어 있는지 확인해주세요.")
-
-# ===== 탭3: 모의 면접 =====
-with tab3:
+with tab2:
     if not st.session_state.generated_intro:
         st.info("먼저 '📝 자기소개서 생성' 탭에서 자기소개서를 생성해주세요.")
     else:
@@ -242,36 +210,11 @@ with tab3:
                 st.session_state.interview_question_count = 0
                 st.session_state.interview_messages = []
 
-                # 첫 질문 생성
-                system_prompt = f"""당신은 IT 기업의 경험 많은 면접관입니다.
-아래 지원자의 자기소개서를 읽고 모의 면접을 진행합니다.
-
-[자기소개서]
-{st.session_state.generated_intro}
-
-[지원자 정보]
-- 이름: {st.session_state.user_info.get('name', '')}
-- 대학교: {st.session_state.user_info.get('university', '')}
-- 학과: {st.session_state.user_info.get('department', '')}
-- 학년: {st.session_state.user_info.get('year', '')}
-- 희망 진로: {st.session_state.user_info.get('career', '')}
-
-[면접 진행 규칙]
-1. 한 번에 질문 1개만 합니다.
-2. 자기소개서 내용을 기반으로 구체적인 질문을 합니다.
-3. 지원자의 답변에 따라 꼬리질문을 하거나 다음 주제로 넘어갑니다.
-4. 기술 질문, 경험 질문, 상황 질문을 골고루 섞습니다.
-5. 면접관답게 정중하지만 날카로운 질문을 합니다.
-6. 답변이 부족하면 더 구체적으로 답변해달라고 요청합니다.
-7. 반드시 한국어로 질문합니다.
-
-먼저 간단한 인사와 함께 첫 번째 질문을 해주세요."""
-
                 with st.spinner("면접관이 질문을 준비하고 있습니다..."):
                     try:
                         first_question = call_bedrock(
-                            [{"role": "user", "content": "면접을 시작해주세요."}],
-                            system_prompt,
+                            [{"role": "user", "content": "면접을 시작해주세요. 자기소개서를 꼼꼼히 읽고 첫 번째 질문을 해주세요."}],
+                            INTERVIEW_SYSTEM,
                         )
                         st.session_state.interview_messages = [
                             {"role": "assistant", "content": first_question}
@@ -284,12 +227,14 @@ with tab3:
 
         with col2:
             if st.button("⏹️ 면접 종료 및 피드백", use_container_width=True, disabled=not st.session_state.interview_started):
-                # 종합 피드백 생성
-                system_prompt = f"""당신은 IT 기업의 경험 많은 면접관입니다.
+                feedback_system = f"""당신은 IT 기업의 경험 많은 면접관입니다.
 방금 진행한 모의 면접에 대해 종합 피드백을 제공해주세요.
 
 [지원자 정보]
 - 희망 진로: {st.session_state.user_info.get('career', '')}
+
+[자기소개서]
+{st.session_state.generated_intro}
 
 [피드백 형식]
 ### 📊 종합 평가
@@ -301,8 +246,8 @@ with tab3:
 ### ⚠️ 개선할 점
 - 부족했던 부분과 개선 방향
 
-### 💡 팁
-- 실제 면접에서 도움이 될 조언"""
+### 💡 실전 팁
+- 자기소개서 내용과 연결하여 실제 면접에서 도움이 될 구체적 조언"""
 
                 with st.spinner("피드백을 생성하고 있습니다..."):
                     try:
@@ -315,7 +260,7 @@ with tab3:
                             "content": "면접이 끝났습니다. 종합 피드백을 주세요.",
                         })
 
-                        feedback = call_bedrock(api_messages, system_prompt)
+                        feedback = call_bedrock(api_messages, feedback_system)
                         st.session_state.interview_messages.append({
                             "role": "assistant",
                             "content": f"---\n## 🎯 면접 종합 피드백\n\n{feedback}",
@@ -331,7 +276,6 @@ with tab3:
 
         # 면접 대화 히스토리 표시
         for msg in st.session_state.interview_messages:
-            role_label = "면접관" if msg["role"] == "assistant" else "나"
             avatar = "👔" if msg["role"] == "assistant" else "🙋"
             with st.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
@@ -341,24 +285,6 @@ with tab3:
             if answer := st.chat_input("답변을 입력하세요...", key="interview_input"):
                 st.session_state.interview_messages.append({"role": "user", "content": answer})
 
-                system_prompt = f"""당신은 IT 기업의 경험 많은 면접관입니다.
-모의 면접을 진행 중입니다.
-
-[자기소개서]
-{st.session_state.generated_intro}
-
-[지원자 정보]
-- 이름: {st.session_state.user_info.get('name', '')}
-- 희망 진로: {st.session_state.user_info.get('career', '')}
-
-[면접 진행 규칙]
-1. 한 번에 질문 1개만 합니다.
-2. 지원자의 답변이 모호하거나 부족하면 꼬리질문을 합니다.
-3. 답변이 충분하면 다음 주제로 넘어갑니다.
-4. 기술 질문, 경험 질문, 인성 질문, 상황 질문을 골고루 섞습니다.
-5. 간단히 답변에 대한 반응(좋은 답변입니다/조금 더 구체적으로 등)을 한 후 다음 질문을 합니다.
-6. 반드시 한국어로 진행합니다."""
-
                 with st.spinner("면접관이 다음 질문을 준비하고 있습니다..."):
                     try:
                         api_messages = [
@@ -366,7 +292,7 @@ with tab3:
                             for m in st.session_state.interview_messages
                         ]
 
-                        response = call_bedrock(api_messages, system_prompt)
+                        response = call_bedrock(api_messages, INTERVIEW_SYSTEM)
                         st.session_state.interview_messages.append({
                             "role": "assistant",
                             "content": response,
