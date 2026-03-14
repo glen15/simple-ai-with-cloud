@@ -5,6 +5,7 @@ IT 자기소개서 생성기 (v3 NiceGUI: AI 생성 + 모의 면접)
 AWS 자격증명 필요 (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION)
 """
 import json
+import asyncio
 import boto3
 from nicegui import ui
 
@@ -60,8 +61,8 @@ def build_interview_system(intro, info):
 2. 반드시 자기소개서에 적힌 구체적인 내용(프로젝트명, 기술, 경험, 목표 등)을 인용하며 질문하세요.
 3. 지원자의 답변이 모호하면 꼬리질문으로 더 깊이 파고드세요.
 4. 지원자가 답변하면 반드시 아래 형식으로 응답하세요:
-   **[답변 평가]** 답변의 좋은 점과 아쉬운 점을 1-2문장으로 짧게 평가합니다.
-   **[조언]** 실제 면접에서 이 답변을 더 잘할 수 있는 팁을 1문장으로 제공합니다.
+   **[답변 평가]** 냉정하고 솔직하게 평가합니다. 좋은 점이 있으면 인정하되, 부족한 점은 구체적으로 지적하세요. 두루뭉술하거나 핵심이 없는 답변에는 "구체성이 부족합니다", "실제 경험이 드러나지 않습니다" 등 직접적으로 말해주세요. 칭찬 위주로 하지 마세요.
+   **[조언]** 이 답변을 실제 면접에서 어떻게 개선해야 하는지 구체적 방법을 1-2문장으로 제시합니다.
    **[다음 질문]** 답변 내용에 따라 꼬리질문 또는 새로운 질문을 합니다.
 5. 질문 유형을 골고루 섞으세요:
    - 경험 질문: 자기소개서에 적힌 프로젝트/활동에 대한 구체적 상황
@@ -165,7 +166,7 @@ def main_page():
                 system = "당신은 IT 분야 자기소개서 전문 작성 도우미입니다. 지원자의 정보를 바탕으로 설득력 있는 자기소개서를 작성합니다."
 
                 try:
-                    result = call_bedrock([{"role": "user", "content": prompt}], system)
+                    result = await asyncio.to_thread(call_bedrock, [{"role": "user", "content": prompt}], system)
                     app_state["generated_intro"] = result
                     app_state["user_info"] = {
                         "name": name.value, "university": university.value,
@@ -241,7 +242,8 @@ def main_page():
                 )
 
                 try:
-                    first_q = call_bedrock(
+                    first_q = await asyncio.to_thread(
+                        call_bedrock,
                         [{"role": "user", "content": "면접을 시작해주세요. 자기소개서를 꼼꼼히 읽고 첫 번째 질문을 해주세요."}],
                         system_prompt,
                     )
@@ -277,7 +279,7 @@ def main_page():
                     api_messages.append({"role": m["role"], "content": m["content"]})
 
                 try:
-                    response = call_bedrock(api_messages, system_prompt)
+                    response = await asyncio.to_thread(call_bedrock, api_messages, system_prompt)
                     app_state["interview_messages"].append({"role": "assistant", "content": response})
                     render_messages()
                 except Exception as e:
@@ -322,7 +324,7 @@ def main_page():
                 api_messages.append({"role": "user", "content": "면접이 끝났습니다. 종합 피드백을 주세요."})
 
                 try:
-                    feedback = call_bedrock(api_messages, feedback_system)
+                    feedback = await asyncio.to_thread(call_bedrock, api_messages, feedback_system)
                     app_state["interview_messages"].append({
                         "role": "assistant",
                         "content": f"---\n## 🎯 면접 종합 피드백\n\n{feedback}",
