@@ -102,11 +102,11 @@ with tab1:
 
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("이름", placeholder="홍길동")
-        university = st.text_input("대학교", placeholder="한국대학교")
+        name = st.text_input("이름", value="홍길동")
+        university = st.text_input("대학교", value="한국대학교")
     with col2:
-        department = st.text_input("학과", placeholder="컴퓨터공학과")
-        year = st.selectbox("학년", ["1학년", "2학년", "3학년", "4학년", "졸업예정"])
+        department = st.text_input("학과", value="컴퓨터공학과")
+        year = st.selectbox("학년", ["1학년", "2학년", "3학년", "4학년", "졸업예정"], index=2)
 
     career = st.selectbox("희망 진로", CAREERS)
     tone = st.selectbox(
@@ -116,12 +116,12 @@ with tab1:
 
     experience = st.text_area(
         "관련 경험 (선택사항)",
-        placeholder="프로젝트, 인턴, 스터디, 자격증, 공모전 등",
+        value="교내 웹 개발 프로젝트에서 팀장을 맡아 3개월간 서비스를 개발한 경험이 있습니다.",
         height=100,
     )
     motivation = st.text_area(
         "지원 동기 (선택사항)",
-        placeholder="이 분야를 선택한 이유나 계기",
+        value="",
         height=100,
     )
 

@@ -54,6 +54,12 @@ CAREERS = {
         "strength": "보안 위협을 탐지하고 대응하는 과정에서 도전의식을 느낍니다.",
         "goal": "조직의 보안 체계를 설계하고 위협에 대응하는 보안 엔지니어",
     },
+    "DevSecOps 엔지니어": {
+        "skills": "CI/CD, Docker, Kubernetes, 보안 자동화, IaC, SAST/DAST",
+        "description": "개발·보안·운영을 통합하여 안전한 소프트웨어 배포를 자동화하는",
+        "strength": "보안을 개발 초기 단계부터 내재화하고, 자동화된 파이프라인으로 안전한 배포를 실현하는 데 관심이 많습니다.",
+        "goal": "보안이 내재된 DevOps 문화를 주도하는 DevSecOps 엔지니어",
+    },
     "AI 엔지니어": {
         "skills": "Python, PyTorch, TensorFlow, LLM, MLOps",
         "description": "인공지능 모델을 개발하고 서비스에 적용하는",
@@ -106,7 +112,8 @@ with col2:
     department = st.text_input("학과", value="컴퓨터공학과")
     year = st.selectbox("학년", ["1학년", "2학년", "3학년", "4학년", "졸업예정"], index=2)
 
-career = st.selectbox("희망 진로", list(CAREERS.keys()))
+career_list = list(CAREERS.keys())
+career = st.selectbox("희망 진로", career_list, index=career_list.index("DevSecOps 엔지니어"))
 
 # 선택한 진로 정보 표시
 with st.expander(f"💡 {career} 관련 정보"):
