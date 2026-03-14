@@ -26,11 +26,6 @@ curl -fsSL https://cli.kiro.dev/install | bash
 ### 패키지 설치
 
 ```bash
-# uv 사용 (권장, pip보다 10~100배 빠름)
-pip install uv
-uv pip install -r requirements.txt --system
-
-# 또는 pip 사용
 pip install -r requirements.txt
 ```
 
