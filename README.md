@@ -7,8 +7,8 @@
 | 버전 | 파일 | 설명 |
 |------|------|------|
 | v1 | `app_v1.py` | 템플릿 기반 (AI 없음) |
-| v2 | `app_v2.py` | Bedrock Claude Haiku AI 생성 |
-| v3 | `app_v3.py` | AI 생성 + 챗봇 (수정 요청/진로 상담) |
+| v2 | `.app_v2.py` | Bedrock Claude Haiku AI 생성 |
+| v3 | `.app_v3.py` | AI 생성 + 챗봇 (수정 요청/진로 상담) |
 
 ## 지원 진로
 
@@ -35,10 +35,10 @@ pip install streamlit boto3
 streamlit run app_v1.py
 
 # v2: AI 버전
-streamlit run app_v2.py
+streamlit run .app_v2.py
 
 # v3: AI + 챗봇 버전
-streamlit run app_v3.py
+streamlit run .app_v3.py
 ```
 
 ## 사전 요구사항
